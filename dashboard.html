@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Habit Lite — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0f; --card: #141417; --card2: #1a1a1f; --border: #232329;
+      --accent: #c8f135; --text: #f0f0ee; --muted: #6b6b72;
+      --danger: #ff5a5a; --success: #4ade80;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 40px 40px; pointer-events: none;
+    }
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,13,15,0.85); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border); padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; height: 64px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .nav-logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .nav-logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
+    .nav-logo-text span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .user-avatar { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--border); object-fit: cover; }
+    .user-name { font-size: 14px; font-weight: 500; }
+    .btn-logout { padding: 7px 16px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+    .main { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
+    .greeting { margin-bottom: 32px; animation: fadeUp 0.5s ease both; }
+    .greeting h1 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+    .greeting h1 span { color: var(--accent); }
+    .greeting p { color: var(--muted); font-size: 14px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 28px; animation: fadeUp 0.5s 0.1s ease both; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 16px; text-align: center; }
+    .stat-num { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .add-section { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 24px; animation: fadeUp 0.5s 0.2s ease both; }
+    .add-section h2 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .emoji-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .emoji-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--card2); border: 1px solid var(--border); font-size: 18px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+    .emoji-btn:hover { border-color: var(--accent); transform: scale(1.1); }
+    .emoji-btn.selected { border-color: var(--accent); background: rgba(200,241,53,0.1); }
+    .add-row { display: flex; gap: 10px; }
+    .habit-input { flex: 1; padding: 12px 16px; background: var(--card2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .habit-input::placeholder { color: var(--muted); }
+    .habit-input:focus { border-color: var(--accent); }
+    .btn-add { padding: 12px 20px; background: var(--accent); border: none; border-radius: 12px; color: #0d0d0f; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .btn-add:hover { background: #d4f542; transform: translateY(-1px); }
+    .btn-add:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .habits-section { animation: fadeUp 0.5s 0.3s ease both; }
+    .habits-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .habits-header h2 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+    .habits-count { background: rgba(200,241,53,0.1); border: 1px solid rgba(200,241,53,0.2); border-radius: 100px; padding: 3px 10px; font-size: 12px; color: var(--accent); }
+    .empty-state { text-align: center; padding: 48px 20px; background: var(--card); border: 1px dashed var(--border); border-radius: 20px; }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { color: var(--muted); font-size: 14px; }
+    .habit-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; transition: all 0.2s; animation: fadeUp 0.3s ease both; }
+    .habit-card:hover { border-color: #333340; transform: translateY(-1px); }
+    .habit-card.completed { border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.04); }
+    .check-btn { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; border: 2px solid var(--border); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.2s; }
+    .check-btn:hover { border-color: var(--success); }
+    .habit-card.completed .check-btn { background: var(--success); border-color: var(--success); }
+    .habit-info { flex: 1; }
+    .habit-name { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .habit-card.completed .habit-name { color: var(--muted); text-decoration: line-through; }
+    .habit-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .streak-badge { display: flex; align-items: center; gap: 4px; background: rgba(200,241,53,0.08); border: 1px solid rgba(200,241,53,0.15); border-radius: 100px; padding: 4px 10px; font-size: 12px; color: var(--accent); white-space: nowrap; }
+    .streak-badge.hot { background: rgba(255,100,50,0.1); border-color: rgba(255,100,50,0.2); color: #ff8c5a; }
+    .delete-btn { width: 30px; height: 30px; border-radius: 8px; background: transparent; border: 1px solid transparent; color: var(--muted); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+    .delete-btn:hover { border-color: var(--danger); color: var(--danger); background: rgba(255,90,90,0.08); }
+    .loading { text-align: center; padding: 48px; color: var(--muted); font-size: 14px; }
+    .loading-spinner { width: 28px; height: 28px; margin: 0 auto 12px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; font-size: 14px; z-index: 999; transition: transform 0.3s cubic-bezier(0.22,1,0.36,1); white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(74,222,128,0.4); color: var(--success); }
+    .toast.error { border-color: rgba(255,90,90,0.4); color: var(--danger); }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">🔥</div>
+      <div class="nav-logo-text">Habit<span>Lite</span></div>
+    </div>
+    <div class="nav-right">
+      <div class="user-info">
+        <img class="user-avatar" id="userAvatar" src="" alt=""/>
+        <span class="user-name" id="userName">...</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="greeting">
+      <h1>Hey, <span id="firstName">there</span> 👋</h1>
+      <p id="todayDate"></p>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total Habits</div></div>
+      <div class="stat-card"><div class="stat-num" id="statDone">0</div><div class="stat-label">Done Today</div></div>
+      <div class="stat-card"><div class="stat-num" id="statBest">0</div><div class="stat-label">Best Streak 🔥</div></div>
+    </div>
+    <div class="add-section">
+      <h2>➕ Add New Habit</h2>
+      <div class="emoji-row" id="emojiRow"></div>
+      <div class="add-row">
+        <input class="habit-input" id="habitInput" type="text" placeholder="e.g. Drink water, Read 20 pages..." maxlength="40" onkeydown="if(event.key==='Enter') addHabit()"/>
+        <button class="btn-add" id="addBtn" onclick="addHabit()">Add</button>
+      </div>
+    </div>
+    <div class="habits-section">
+      <div class="habits-header">
+        <h2>📋 My Habits</h2>
+        <span class="habits-count" id="habitsCount">0 habits</span>
+      </div>
+      <div id="habitsList">
+        <div class="loading"><div class="loading-spinner"></div>Loading your habits...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ✅ FIXED: Using unpkg CDN (more reliable) -->
+<script src="https://unpkg.com/firebase@9.23.0/compat/app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDQ-XzTpItOz1yq3JG_an1wWZGZ6Cd9sPM",
+      authDomain: "habit-lite-e1f3d.firebaseapp.com",
+      projectId: "habit-lite-e1f3d",
+      storageBucket: "habit-lite-e1f3d.firebasestorage.app",
+      messagingSenderId: "457754962204",
+      appId: "1:457754962204:web:8cbce9e01e0fba7ef5b2d9",
+      measurementId: "G-WBL134M9VH"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    let currentUser = null;
+    let habits      = [];
+    let selectedEmoji = '⭐';
+    const EMOJIS = ['⭐','💧','📚','🏃','🧘','💪','🥗','😴','✍️','🎯'];
+
+    auth.onAuthStateChanged(user => {
+      if (!user) { window.location.href = 'index.html'; return; }
+      currentUser = user;
+      initUI();
+      loadHabits();
+    });
+
+    function initUI() {
+      document.getElementById('userAvatar').src = currentUser.photoURL || '';
+      document.getElementById('userName').textContent = currentUser.displayName || 'User';
+      document.getElementById('firstName').textContent = (currentUser.displayName || 'there').split(' ')[0];
+      document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+      const row = document.getElementById('emojiRow');
+      EMOJIS.forEach(e => {
+        const btn = document.createElement('button');
+        btn.className = 'emoji-btn' + (e === selectedEmoji ? ' selected' : '');
+        btn.textContent = e;
+        btn.onclick = () => {
+          selectedEmoji = e;
+          document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        };
+        row.appendChild(btn);
+      });
+    }
+
+    function loadHabits() {
+      db.collection('users').doc(currentUser.uid).collection('habits')
+        .orderBy('createdAt', 'asc')
+        .onSnapshot(snap => {
+          habits = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderHabits();
+          updateStats();
+        });
+    }
+
+    async function addHabit() {
+      const input = document.getElementById('habitInput');
+      const name  = input.value.trim();
+      if (!name) { showToast('Enter a habit name!', 'error'); return; }
+      const btn = document.getElementById('addBtn');
+      btn.disabled = true; btn.textContent = '...';
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('habits').add({
+          name, emoji: selectedEmoji, streak: 0,
+          lastCompleted: null, completedToday: false,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        input.value = '';
+        showToast('Habit added! 🎉', 'success');
+      } catch (e) { showToast('Failed to add habit', 'error'); }
+      btn.disabled = false; btn.textContent = 'Add';
+    }
+
+    async function toggleHabit(habitId) {
+      const habit = habits.find(h => h.id === habitId);
+      if (!habit) return;
+      const today     = getTodayStr();
+      const yesterday = getYesterdayStr();
+      let newStreak = habit.streak || 0;
+
+      if (habit.completedToday) {
+        newStreak = Math.max(0, newStreak - 1);
+        await db.collection('users').doc(currentUser.uid).collection('habits').doc(habitId)
+          .update({ streak: newStreak, lastCompleted: yesterday, completedToday: false });
+        showToast('Marked incomplete', '');
+      } else {
+        newStreak = habit.lastCompleted === yesterday ? newStreak + 1 : 1;
+        await db.collection('users').doc(currentUser.uid).collection('habits').doc(habitId)
+          .update({ streak: newStreak, lastCompleted: today, completedToday: true });
+        showToast(newStreak > 1 ? `🔥 ${newStreak} day streak!` : '✅ Done! Keep it up!', 'success');
+      }
+    }
+
+    async function deleteHabit(habitId) {
+      if (!confirm('Delete this habit?')) return;
+      await db.collection('users').doc(currentUser.uid).collection('habits').doc(habitId).delete();
+      showToast('Habit deleted', '');
+    }
+
+    function renderHabits() {
+      const list = document.getElementById('habitsList');
+      document.getElementById('habitsCount').textContent = `${habits.length} habit${habits.length !== 1 ? 's' : ''}`;
+      if (habits.length === 0) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-icon">🌱</div><p>No habits yet. Add your first habit above!</p></div>`;
+        return;
+      }
+      const today = getTodayStr();
+      habits.forEach(h => {
+        if (h.lastCompleted !== today && h.completedToday) {
+          db.collection('users').doc(currentUser.uid).collection('habits').doc(h.id)
+            .update({ completedToday: false });
+        }
+      });
+      list.innerHTML = habits.map(h => `
+        <div class="habit-card ${h.completedToday ? 'completed' : ''}">
+          <button class="check-btn" onclick="toggleHabit('${h.id}')">${h.completedToday ? '✓' : ''}</button>
+          <div class="habit-info">
+            <div class="habit-name">${h.emoji || '⭐'} ${escHtml(h.name)}</div>
+            <div class="habit-meta">${h.completedToday ? 'Completed today ✅' : 'Tap to complete'}</div>
+          </div>
+          <div class="streak-badge ${(h.streak||0) >= 3 ? 'hot' : ''}">🔥 ${h.streak || 0}d</div>
+          <button class="delete-btn" onclick="deleteHabit('${h.id}')">✕</button>
+        </div>`).join('');
+    }
+
+    function updateStats() {
+      document.getElementById('statTotal').textContent = habits.length;
+      document.getElementById('statDone').textContent  = habits.filter(h => h.completedToday).length;
+      document.getElementById('statBest').textContent  = habits.reduce((m,h) => Math.max(m, h.streak||0), 0);
+    }
+
+    async function logout() {
+      await auth.signOut();
+      window.location.href = 'index.html';
+    }
+
+    function getTodayStr()     { return new Date().toISOString().split('T')[0]; }
+    function getYesterdayStr() { const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0]; }
+    function escHtml(s)        { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    let toastTimer;
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `toast ${type} show`;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+    }
+  </script>
+</body>
+</html>
